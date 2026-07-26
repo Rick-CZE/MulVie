@@ -1,0 +1,86 @@
+[package]
+name = "mulvie"
+version = "1.0.0"
+edition = "2021"
+description = "MulVie — portable multi-image presentation viewer"
+authors = ["Rick-CZE"]
+license = "MIT"
+
+[dependencies]
+# glow (OpenGL) renderer only — avoids pulling the heavy wgpu/naga/ash stack,
+# which we don't use. Smaller binary, faster builds.
+eframe = { version = "0.29", default-features = false, features = [
+    "glow",
+    "default_fonts",
+    "wayland",
+    "x11",
+] }
+image = { version = "0.25", default-features = false, features = [
+    "jpeg",
+    "png",
+    "gif",
+    "bmp",
+    "tiff",
+    "webp",
+    # Pure-Rust decoders (no external C library), so they add negligible size
+    # and no runtime dependency. Modern formats (AVIF/HEIC/JPEG XL) are omitted
+    # (each needs a bundled C library); ICO is omitted too — image 0.25's ICO
+    # decoder rejects icons whose embedded PNG isn't RGBA ("The PNG is not in
+    # RGBA format!"), which is common in real-world .ico files.
+    "tga",
+    "qoi",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Validate system font files before handing them to egui, so a corrupt or
+# unrecognised font is skipped rather than crashing the UI. Matches the
+# ab_glyph version egui/epaint 0.29 already pulls in (no extra build cost).
+ab_glyph = "0.2"
+rfd = "0.14"
+natord = "1.0.9"
+# Move files to the Windows Recycle Bin (with permanent-delete fallback).
+trash = "5"
+raw-window-handle = "0.6"
+libloading = "0.8"
+libmpv2 = "6.0.0"
+pdfium-render = "0.9"
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_OpenGL",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_WindowsAndMessaging",
+] }
+# Decompresses the one-file installer's embedded payload (installer only).
+flate2 = { version = "1", optional = true }
+
+[features]
+# The one-file "fake install" exe (see src/bin/installer.rs). Off by default:
+# its payload is the ASSEMBLED dist\MulVie folder, so it can only build after
+# package.ps1 has run — package.ps1 builds it as its last step.
+installer = ["dep:flate2"]
+
+[[bin]]
+name = "mulvie"
+path = "src/main.rs"
+
+[[bin]]
+name = "mulvie_installer"
+path = "src/bin/installer.rs"
+required-features = ["installer"]
+
+[build-dependencies]
+# Embeds assets/icon.ico into the exe (Explorer/desktop icon).
+winresource = "0.1"
+# Gzips the installer payload into OUT_DIR at build time (installer only).
+flate2 = "1"
+
+# Fast, small, standalone release binary for the USB stick.
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+# Speed up image decoding even in debug builds so the viewer feels snappy.
+[profile.dev.package."*"]
+opt-level = 2

@@ -1,0 +1,15 @@
+/target
+/dist
+/_backups
+mulvi_config.json
+*.pdb
+# Bundled binary libs are staged separately (large); keep the import lib.
+libmpv/libmpv-2.dll
+pdfium/*.dll
+# Runtime files the app writes next to the exe (never publish user settings)
+mulvie_config.json
+mulvie_libraries.json
+mulvie_open.txt
+# Local test content and source-transfer bundles
+/test_media/
+mulvie_src_*.zip

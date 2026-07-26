@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MulVie
+Comment=Portable multi-viewer
+Exec=/path/to/MulVie/mulvie
+Icon=/path/to/MulVie/icon.png
+Terminal=false
+StartupWMClass=mulvie
